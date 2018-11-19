@@ -95,6 +95,9 @@ static void qemu_detect(void)
     case 0x29c0:
         dprintf(1, "Running on QEMU (q35)\n");
         break;
+    case 0x0d57:
+        dprintf(1, "Running on QEMU (virt)\n");
+        break;
     default:
         dprintf(1, "Running on QEMU (unknown nb: %04x:%04x)\n", v, d);
         break;
