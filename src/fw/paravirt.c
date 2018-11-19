@@ -419,12 +419,12 @@ qemu_get_present_cpus_count(void)
     u16 smp_count = 0;
     if (qemu_cfg_enabled()) {
         qemu_cfg_read_entry(&smp_count, QEMU_CFG_NB_CPUS, sizeof(smp_count));
+        if (smp_count > 0) {
+            return smp_count;
+        }
     }
-    u16 cmos_cpu_count = rtc_read(CMOS_BIOS_SMP_COUNT) + 1;
-    if (smp_count < cmos_cpu_count) {
-        smp_count = cmos_cpu_count;
-    }
-    return smp_count;
+
+    return rtc_read(CMOS_BIOS_SMP_COUNT) + 1;
 }
 
 struct e820_reservation {
