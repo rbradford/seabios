@@ -142,6 +142,11 @@ make_bios_writable(void)
             ShadowBDF = bdf;
             return;
         }
+        if (vendor == PCI_VENDOR_ID_INTEL
+            && device == PCI_DEVICE_ID_INTEL_VIRT) {
+            ShadowBDF = bdf;
+            return;
+        }
     }
     dprintf(1, "Unable to unlock ram - bridge not found\n");
 }
