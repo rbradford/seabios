@@ -105,6 +105,8 @@ static void qemu_detect(void)
     kvm_detect();
 }
 
+static void qemu_cfg_read_entry(void *buf, int e, int len);
+
 void
 qemu_preinit(void)
 {
@@ -126,22 +128,31 @@ qemu_preinit(void)
 
     qemu_cfg_preinit();
 
-    // On emulators, get memory size from nvram.
-    u32 rs = ((rtc_read(CMOS_MEM_EXTMEM2_LOW) << 16)
-              | (rtc_read(CMOS_MEM_EXTMEM2_HIGH) << 24));
-    if (rs)
-        rs += 16 * 1024 * 1024;
-    else
-        rs = (((rtc_read(CMOS_MEM_EXTMEM_LOW) << 10)
-               | (rtc_read(CMOS_MEM_EXTMEM_HIGH) << 18))
-              + 1 * 1024 * 1024);
-    RamSize = rs;
-    e820_add(0, rs, E820_RAM);
+    // Prefer QEMU FW CFG entry over CMOS for initial RAM sizes
+    if (qemu_cfg_enabled()) {
+        qemu_cfg_read_entry(&RamSize, 0x03, sizeof(RamSize));
+        if (RamSize > 0) {
+            e820_add(0, RamSize, E820_RAM);
+            dprintf(1, "RamSize: 0x%08x [fw_cfg]\n", RamSize);
+        }
+    }
+
+    if (RamSize == 0) {
+        u32 rs = ((rtc_read(CMOS_MEM_EXTMEM2_LOW) << 16)
+                | (rtc_read(CMOS_MEM_EXTMEM2_HIGH) << 24));
+        if (rs)
+            rs += 16 * 1024 * 1024;
+        else
+            rs = (((rtc_read(CMOS_MEM_EXTMEM_LOW) << 10)
+                | (rtc_read(CMOS_MEM_EXTMEM_HIGH) << 18))
+                + 1 * 1024 * 1024);
+        RamSize = rs;
+        e820_add(0, rs, E820_RAM);
+        dprintf(1, "RamSize: 0x%08x [cmos]\n", RamSize);
+    }
 
     /* reserve 256KB BIOS area at the end of 4 GB */
     e820_add(0xfffc0000, 256*1024, E820_RESERVED);
-
-    dprintf(1, "RamSize: 0x%08x [cmos]\n", RamSize);
 }
 
 #define MSR_IA32_FEATURE_CONTROL 0x0000003a
