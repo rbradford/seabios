@@ -124,6 +124,8 @@ qemu_preinit(void)
         kvm_detect();
     }
 
+    qemu_cfg_preinit();
+
     // On emulators, get memory size from nvram.
     u32 rs = ((rtc_read(CMOS_MEM_EXTMEM2_LOW) << 16)
               | (rtc_read(CMOS_MEM_EXTMEM2_HIGH) << 24));
@@ -571,8 +573,7 @@ struct QemuCfgFile {
     char name[56];
 };
 
-void qemu_cfg_init(void)
-{
+void qemu_cfg_preinit(void) {
     if (!runningOnQEMU())
         return;
 
@@ -595,6 +596,12 @@ void qemu_cfg_init(void)
         dprintf(1, "QEMU fw_cfg DMA interface supported\n");
         cfg_dma_enabled = 1;
     }
+}
+
+void qemu_cfg_init(void)
+{
+    if (!qemu_cfg_enabled())
+        return;
 
     // Populate romfiles for legacy fw_cfg entries
     qemu_cfg_legacy();
