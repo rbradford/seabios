@@ -215,6 +215,10 @@ static void mch_isa_bridge_setup(struct pci_device *dev, void *arg)
     pmtimer_setup(acpi_pm_base + 0x08);
 }
 
+static void virt_bridge_setup(struct pci_device *dev, void *arg) {
+    pmtimer_setup(0x3e0);
+}
+
 static void storage_ide_setup(struct pci_device *pci, void *arg)
 {
     /* IDE: we map it as in ISA mode */
@@ -340,6 +344,9 @@ static const struct pci_device_id pci_device_tbl[] = {
                piix_isa_bridge_setup),
     PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH9_LPC,
                mch_isa_bridge_setup),
+
+    /* virt PCI host bridge */
+    PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_VIRT, virt_bridge_setup),
 
     /* STORAGE IDE */
     PCI_DEVICE_CLASS(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82371SB_1,
